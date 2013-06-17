@@ -112,10 +112,20 @@ namespace Adminomatic\AutoMapper {
 
 				$srcProperty = null;
 				if(self::TryGetReflectionProperty($destinationProperty->name, $source, $srcProperty)) {
-					$destination->{$destinationProperty->name} = $this->MapProperty($destinationProperty, $srcProperty->getValue($source));
+                                        $destination->{$destinationProperty->name} = $this->MapProperty($destinationProperty, $srcProperty->getValue($source));
 					continue;
 				}
-			}
+                                
+                                
+                                // reflection won't work on stdClass because stdClass does not define any properties
+                                // TODO: Check the source specifically for stdClass and copy if the names match, but still won't have the nice type checking
+                                if (isset($source->{$destinationProperty->name}))
+                                {
+                                    $destination->{$destinationProperty->name} = $source->{$destinationProperty->name};
+                                    continue;
+                                }
+                        }
+                                
 			return $destination;
 		}
 		
@@ -213,9 +223,9 @@ namespace Adminomatic\AutoMapper {
 		}
 		
 		private static function TryGetReflectionProperty($propertyName, $sourceClass, &$outSourceReflectionProperty) {
-			$sourceReflectionClass = new \ReflectionClass($sourceClass);
+                    $sourceReflectionClass = new \ReflectionClass($sourceClass);
 			foreach($sourceReflectionClass->getProperties(\ReflectionProperty::IS_PUBLIC) as $sourceReflectionProperty) {
-				if($sourceReflectionProperty->name == $propertyName) {
+                            if($sourceReflectionProperty->name == $propertyName) {
 					$outSourceReflectionProperty = $sourceReflectionProperty;
 					return true;
 				}
